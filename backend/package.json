@@ -1,7 +1,6 @@
 {
   "name": "adidas-clone-backend",
   "private": true,
-  "type": "module",
   "scripts": {
     "dev": "npx --yes tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
