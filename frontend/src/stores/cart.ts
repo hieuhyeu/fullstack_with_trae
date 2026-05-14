@@ -34,9 +34,13 @@ export const useCartStore = defineStore("cart", () => {
   const subtotal = computed(() => items.value.reduce((s, i) => s + i.subtotal, 0));
   const isEmpty = computed(() => items.value.length === 0);
 
-  function authHeaders() {
+  function authHeaders(): Record<string, string> {
     const auth = useAuthStore();
-    return auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {};
+    const headers: Record<string, string> = {};
+    if (auth.accessToken) {
+      headers["Authorization"] = `Bearer ${auth.accessToken}`;
+    }
+    return headers;
   }
 
   async function fetchCart() {
