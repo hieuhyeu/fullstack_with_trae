@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import ws from "ws";
 
 export function getSupabaseAdmin() {
   const url = process.env.SUPABASE_URL;
@@ -8,7 +9,8 @@ export function getSupabaseAdmin() {
   if (!serviceRoleKey) throw new Error("SUPABASE_SERVICE_ROLE_KEY is required");
 
   return createClient(url, serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false }
+    auth: { persistSession: false, autoRefreshToken: false },
+    realtime: { transport: ws as any }
   });
 }
 
@@ -17,7 +19,8 @@ export function getSupabaseAdminOptional() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceRoleKey) return null;
   return createClient(url, serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false }
+    auth: { persistSession: false, autoRefreshToken: false },
+    realtime: { transport: ws as any }
   });
 }
 
@@ -34,6 +37,7 @@ export function getSupabaseRlsClient(accessToken: string) {
       headers: {
         Authorization: `Bearer ${accessToken}`
       }
-    }
+    },
+    realtime: { transport: ws as any }
   });
 }

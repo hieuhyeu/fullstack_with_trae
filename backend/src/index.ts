@@ -4,7 +4,6 @@ import express from "express";
 import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import crypto from "node:crypto";
 import { getRedis } from "./lib/redis";
 import { getSupabaseAdminOptional, getSupabaseRlsClient } from "./lib/supabase";
@@ -29,9 +28,6 @@ app.use(
 );
 
 app.use(express.json({ limit: "1mb" }));
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 app.use("/dev-auth", (_req, res, next) => {
   res.setHeader(
     "Content-Security-Policy",
@@ -994,7 +990,7 @@ app.put("/v1/orders/:order_id/cancel", requireAuth, async (req, res) => {
   res.status(200).json({ success: true, data: order ?? { id: orderId, status: "cancelled" }, message: "Order cancelled successfully" });
 });
 
-app.use((_req, res) => {
+app.use((_req: express.Request, res: express.Response) => {
   res.status(404).json({
     success: false,
     error: { code: "NOT_FOUND", message: "Not Found" }

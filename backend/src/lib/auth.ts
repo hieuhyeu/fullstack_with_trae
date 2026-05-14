@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { createClient } from "@supabase/supabase-js";
+import ws from "ws";
 
 type Authed = {
   userId: string;
@@ -45,7 +46,8 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   }
 
   const supabase = createClient(url, anonKey, {
-    auth: { persistSession: false, autoRefreshToken: false }
+    auth: { persistSession: false, autoRefreshToken: false },
+    realtime: { transport: ws as any }
   });
 
   const { data, error } = await supabase.auth.getUser(token);
@@ -63,7 +65,8 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (serviceRoleKey) {
     const admin = createClient(url, serviceRoleKey, {
-      auth: { persistSession: false, autoRefreshToken: false }
+      auth: { persistSession: false, autoRefreshToken: false },
+      realtime: { transport: ws as any }
     });
     const { data: p } = await admin.from("profiles").select("role").eq("id", userId).maybeSingle();
     req.auth = {

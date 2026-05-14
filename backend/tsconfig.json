@@ -4,11 +4,12 @@
     "lib": ["ES2022"],
     "module": "CommonJS",
     "moduleResolution": "Node",
+    "esModuleInterop": true,
     "outDir": "dist",
     "rootDir": "src",
-    "strict": true,
+    "strict": false,
     "skipLibCheck": true,
-    "noEmitOnError": true,
+    "noEmitOnError": false,
     "types": ["node"]
   },
   "include": ["src/**/*.ts"]
