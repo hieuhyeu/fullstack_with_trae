@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dev Auth Callback</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
+      pre { background: #0b1020; color: #e8e8e8; padding: 12px; border-radius: 8px; overflow: auto; }
+      button { padding: 10px 14px; border-radius: 8px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
+      .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+      .muted { color: #666; }
+    </style>
+  </head>
+  <body>
+    <h1>Dev Auth Callback</h1>
+    <p class="muted">Copy access_token (JWT) và dán vào Swagger → Authorize.</p>
+    <div class="row">
+      <button id="btn-copy" disabled>Copy access_token</button>
+      <a href="/docs" target="_blank">Mở Swagger</a>
+      <a href="/dev-auth">Quay lại</a>
+    </div>
+    <h3>Session</h3>
+    <pre id="out">Loading…</pre>
+    <script type="module">
+      const out = document.getElementById("out");
+      const btn = document.getElementById("btn-copy");
+      let token = "";
+
+      function setOut(obj) {
+        out.textContent = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
+      }
+
+      const cfgRes = await fetch("/dev-auth/config");
+      const cfgJson = await cfgRes.json();
+      if (!cfgJson?.success) {
+        setOut(cfgJson);
+        throw new Error("Missing supabase config");
+      }
+
+      const { supabaseUrl, supabaseAnonKey } = cfgJson.data;
+      const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+      });
+
+      const url = new URL(window.location.href);
+      const errorFromUrl = url.searchParams.get("error_description") ?? url.searchParams.get("error");
+      if (errorFromUrl) {
+        setOut({ ok: false, error: errorFromUrl });
+        throw new Error(errorFromUrl);
+      }
+
+      let { data } = await supabase.auth.getSession();
+      if (!data?.session) {
+        const code = url.searchParams.get("code");
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+          if (error) {
+            setOut({
+              ok: false,
+              error: error.message,
+              hint: "Không refresh callback page. Hãy quay lại /dev-auth và bấm Login Google lại."
+            });
+            throw error;
+          }
+          ({ data } = await supabase.auth.getSession());
+        }
+      }
+
+      token = data?.session?.access_token ?? "";
+
+      setOut({
+        ok: true,
+        user: {
+          id: data?.session?.user?.id,
+          email: data?.session?.user?.email
+        },
+        access_token_preview: token ? token.slice(0, 24) + "..." : null,
+        access_token: token
+      });
+
+      btn.disabled = !token;
+      btn.addEventListener("click", async () => {
+        if (!token) return;
+        await navigator.clipboard.writeText(token);
+        btn.textContent = "Copied!";
+        setTimeout(() => (btn.textContent = "Copy access_token"), 1500);
+      });
+    </script>
+  </body>
+</html>

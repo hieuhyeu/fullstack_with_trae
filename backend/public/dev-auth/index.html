@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dev Auth - Supabase Google OAuth</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
+      pre { background: #0b1020; color: #e8e8e8; padding: 12px; border-radius: 8px; overflow: auto; }
+      button { padding: 10px 14px; border-radius: 8px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
+      .row { display: flex; gap: 12px; flex-wrap: wrap; }
+      .muted { color: #666; }
+    </style>
+  </head>
+  <body>
+    <h1>Dev Auth (Local)</h1>
+    <p class="muted">Trang này dùng để login Google OAuth qua Supabase và lấy access_token (JWT) để test Swagger.</p>
+    <div class="row">
+      <button id="btn-login">Login Google</button>
+      <a href="/docs" target="_blank">Mở Swagger</a>
+    </div>
+    <h3>Trạng thái</h3>
+    <pre id="status">Loading…</pre>
+    <script type="module">
+      const statusEl = document.getElementById("status");
+      function setStatus(obj) {
+        statusEl.textContent = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
+      }
+
+      const cfgRes = await fetch("/dev-auth/config");
+      const cfgJson = await cfgRes.json();
+      if (!cfgJson?.success) {
+        setStatus(cfgJson);
+        throw new Error("Missing supabase config");
+      }
+
+      const { supabaseUrl, supabaseAnonKey } = cfgJson.data;
+      setStatus({ ok: true, supabaseUrl });
+
+      const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+      });
+
+      document.getElementById("btn-login").addEventListener("click", async () => {
+        const redirectTo = `${window.location.origin}/dev-auth/callback.html`;
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo }
+        });
+
+        if (error) {
+          setStatus({ ok: false, error: error.message });
+          return;
+        }
+        setStatus({ ok: true, next: "redirecting", data });
+      });
+    </script>
+  </body>
+</html>
+
