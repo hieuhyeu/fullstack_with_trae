@@ -4,7 +4,6 @@ export const openapi = {
     title: "Adidas Clone API",
     version: "0.1.0"
   },
-  servers: [{ url: "http://localhost:3000" }],
   paths: {
     "/v1/health": {
       get: {
