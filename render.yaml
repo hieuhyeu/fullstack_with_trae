@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: adidas-clone-api
+    env: docker
+    region: singapore
+    plan: free
+    rootDir: backend
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: CORS_ORIGIN
+        value: "https://trae-demo.netlify.app,http://localhost:5173"
