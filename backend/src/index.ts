@@ -19,10 +19,9 @@ app.use(
   })
 );
 
-const corsOrigin = process.env.CORS_ORIGIN;
 app.use(
   cors({
-    origin: corsOrigin ? corsOrigin.split(",").map((s) => s.trim()) : true,
+    origin: (origin, callback) => callback(null, true),
     credentials: true
   })
 );
